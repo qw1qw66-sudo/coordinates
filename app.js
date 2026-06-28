@@ -396,4 +396,20 @@
   loadSampleBtn.addEventListener("click", loadSample);
   exportBtn.addEventListener("click", exportCsv);
   searchInput.addEventListener("input", applySearch);
+
+  // ---- Auto-load embedded data ---------------------------------------------
+  // If the page ships with a built-in dataset (window.COORDINATES_DATA, a
+  // 2-D array whose first row is the header), load it automatically so the
+  // app is ready on open. Uploading a file later replaces this data.
+  (function initEmbedded() {
+    const data = window.COORDINATES_DATA;
+    if (!Array.isArray(data) || data.length < 2) return;
+    try {
+      records = buildRecords(data);
+      afterLoad("تم تحميل البيانات المضمّنة (" + records.length + " سجلًا).");
+    } catch (err) {
+      console.error(err);
+      setStatus("تعذّر تحميل البيانات المضمّنة.", true);
+    }
+  })();
 })();
