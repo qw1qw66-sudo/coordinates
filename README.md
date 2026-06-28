@@ -7,6 +7,20 @@ and RTL-friendly.
 
 **No backend, no database — everything runs in the browser.**
 
+## ▶️ Ready-to-use link (data embedded)
+
+The app ships with the full dataset **embedded directly inside `index.html`**, so
+it loads automatically with no upload step. Open it directly here:
+
+```
+https://raw.githack.com/qw1qw66-sudo/coordinates/main/index.html
+```
+
+Uploading an Excel/CSV file at any time **replaces** the embedded data in that
+session. To refresh the built-in data, regenerate the
+`window.COORDINATES_DATA` `<script>` block inside `index.html` from your latest
+source file (see [Updating the embedded data](#updating-the-embedded-data)).
+
 ---
 
 ## Features
@@ -93,6 +107,19 @@ coordinates/
 ├── README.md
 └── .github/workflows/deploy.yml   # GitHub Pages deployment
 ```
+
+---
+
+## Updating the embedded data
+
+The built-in records live in a `window.COORDINATES_DATA` `<script>` block near
+the bottom of `index.html`. It is a 2-D array whose **first row is the header**
+(`["الرقم", "مكان العمل"]`), matching the structure of an uploaded sheet, so the
+same parsing/validation logic handles both.
+
+To refresh it from a new source file, replace that array with rows in the same
+`[number, "lat,lng"]` shape (use `""` for missing coordinates). Any valid
+Excel/CSV can also just be uploaded in the UI without touching the code.
 
 ---
 

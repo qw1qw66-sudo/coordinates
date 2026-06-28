@@ -293,13 +293,27 @@
 
   function handleFile(file) {
     if (!file) return;
+
+    if (typeof XLSX === "undefined") {
+      setStatus(
+        "تعذّر تحميل مكتبة قراءة الملفات. تأكّد من الاتصال بالإنترنت ثم أعد المحاولة.",
+        true
+      );
+      return;
+    }
+
     setStatus("جارٍ قراءة الملف…");
+
+    // CSV must be read as a UTF-8 string so Arabic text isn't garbled;
+    // binary spreadsheets (.xlsx/.xls) are read as an array buffer.
+    const isCsv = /\.csv$/i.test(file.name) || file.type === "text/csv";
 
     const reader = new FileReader();
     reader.onload = function (e) {
       try {
-        const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data, { type: "array" });
+        const wb = isCsv
+          ? XLSX.read(e.target.result, { type: "string" })
+          : XLSX.read(new Uint8Array(e.target.result), { type: "array" });
         const firstSheet = wb.SheetNames[0];
         const ws = wb.Sheets[firstSheet];
         // header:1 => array of arrays; defval keeps empty cells aligned.
@@ -315,7 +329,11 @@
     reader.onerror = function () {
       setStatus("حدث خطأ أثناء قراءة الملف.", true);
     };
-    reader.readAsArrayBuffer(file);
+    if (isCsv) {
+      reader.readAsText(file, "UTF-8");
+    } else {
+      reader.readAsArrayBuffer(file);
+    }
   }
 
   function afterLoad(message) {
@@ -396,4 +414,20 @@
   loadSampleBtn.addEventListener("click", loadSample);
   exportBtn.addEventListener("click", exportCsv);
   searchInput.addEventListener("input", applySearch);
+
+  // ---- Auto-load embedded data ---------------------------------------------
+  // If the page ships with a built-in dataset (window.COORDINATES_DATA, a
+  // 2-D array whose first row is the header), load it automatically so the
+  // app is ready on open. Uploading a file later replaces this data.
+  (function initEmbedded() {
+    const data = window.COORDINATES_DATA;
+    if (!Array.isArray(data) || data.length < 2) return;
+    try {
+      records = buildRecords(data);
+      afterLoad("تم تحميل البيانات المضمّنة (" + records.length + " سجلًا).");
+    } catch (err) {
+      console.error(err);
+      setStatus("تعذّر تحميل البيانات المضمّنة.", true);
+    }
+  })();
 })();
